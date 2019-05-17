@@ -360,6 +360,24 @@ namespace System
             return result;
         }
 
+        public static async ValueTask<string> CreateAsync<TState>(int length, TState state, AsyncMemoryAction<char, TState> action)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if (length <= 0)
+            {
+                if (length == 0)
+                    return string.Empty;
+                throw new ArgumentOutOfRangeException(nameof(length));
+            }
+
+            string result = FastAllocateString(length);
+            await action(new Memory<char>(result, 0, length), state);
+
+            return result;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ReadOnlySpan<char>(string? value) =>
             value != null ? new ReadOnlySpan<char>(ref value.GetRawStringData(), value.Length) : default;
